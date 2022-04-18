@@ -8,7 +8,7 @@
 
 
 <% postsArray.forEach(function(post) { %>
-  <h2> <a href="posts/<%=post.newTitle.replace(/\s+/g,'-')%>"> <%= post.newTitle %></a> </h2>
+  <h2> <a href="posts/<%=post.id%>"> <%= post.newTitle %></a> </h2>
   <p>
     <%= post.newPost.substr(0, Math.min(100, post.newPost.length)) %>...
   </p>

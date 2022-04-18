@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+var _ = require("lodash");
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
@@ -29,11 +30,10 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model("Post", postSchema);
 
-const test = new Post({ title: "hi", content: "hey"});
-//test.save();
-
-//variables
-
+// Drop all from the collection
+// Post.deleteMany({}, (err, res) => {
+//   if (err) console.log(err);
+// })
 
 app.get("/", (req, res) => {
   const postsArray = [];
@@ -71,31 +71,18 @@ app.get("/compose", (req, res) => {
 
 //title with space is breaking
 
-app.get("/posts/:title", (req, res) => {
-  var title = req.params.title;
-  title = title.replace(/-/g, " ").toLowerCase();
+app.get("/posts/:id", (req, res) => {
+  var id = req.params.id;
 
-  var content = "";
-
-  for (var i = 0; i < postsArray.length; i++) {
-
-    if (postsArray[i].newTitle.toLowerCase() === title) {
-      content = postsArray[i].newPost;
-      break;
-    } else if (i + 1 === postsArray.length) {
-      title = "No Blog Post Found";
-    }
-  }
-
-  res.render("post", {title: title, content: content});
+  Post.findOne({_id: id}, (err, foundPost) => {
+    res.render("post", {title: foundPost.title, content: foundPost.content});
+  });
 })
 
 app.post("/compose", (req, res) => {
-  const newPost = req.body.newPost;
-  const newTitle = req.body.newTitle;
   const posts = new Post ({
-    title: newTitle,
-    content: newPost
+    title: _.capitalize(req.body.newTitle),
+    content: req.body.newPost
   });
   posts.save((err, postSaved) => {
     if(!err) res.redirect("/");
@@ -107,9 +94,6 @@ app.post("/compose", (req, res) => {
 //bugs: more than 1 space in title
 //solution: show the spaces in the title by forcing the spaces in HTML file
 // or: remove the spaces before the data is pushed into the array
-
-
-
 
 
 
