@@ -3,6 +3,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose = require("mongoose");
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
@@ -15,13 +16,44 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+main().catch(err => console.log(err));
+
+async function main() {
+  await mongoose.connect('mongodb+srv://nyq62:1234@cluster0.pivnu.mongodb.net/blogDB?retryWrites=true&w=majority');
+}
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String
+});
+
+const Post = mongoose.model("Post", postSchema);
+
+const test = new Post({ title: "hi", content: "hey"});
+//test.save();
+
 //variables
-const postsArray = [];
+
 
 app.get("/", (req, res) => {
-  res.render("home", {
-    homeStartingContent: homeStartingContent,
-    postsArray: postsArray
+  const postsArray = [];
+  Post.find({}, (err, foundPosts) => {
+    if (err) console.log(err);
+
+    console.log(foundPosts);
+    foundPosts.forEach(post => {
+      const newPost = {
+        newTitle: post.title,
+        newPost: post.content,
+        id: post._id
+      };
+      postsArray.push(newPost);
+    });
+
+    res.render("home", {
+      homeStartingContent: homeStartingContent,
+      postsArray: postsArray
+    });
   });
 })
 
@@ -61,12 +93,14 @@ app.get("/posts/:title", (req, res) => {
 app.post("/compose", (req, res) => {
   const newPost = req.body.newPost;
   const newTitle = req.body.newTitle;
-  const posts = {
-    newTitle: newTitle,
-    newPost: newPost
-  };
-  postsArray.push(posts);
-  res.redirect("/");
+  const posts = new Post ({
+    title: newTitle,
+    content: newPost
+  });
+  posts.save((err, postSaved) => {
+    if(!err) res.redirect("/");
+  });
+
 })
 
 
