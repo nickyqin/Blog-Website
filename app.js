@@ -1,5 +1,6 @@
 //jshint esversion:6
 
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -20,7 +21,7 @@ app.use(express.static("public"));
 main().catch(err => console.log(err));
 
 async function main() {
-  await mongoose.connect('mongodb+srv://nyq62:1234@cluster0.pivnu.mongodb.net/blogDB?retryWrites=true&w=majority');
+  await mongoose.connect(process.env.DB_INFO);
 }
 
 const postSchema = new mongoose.Schema({
